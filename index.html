@@ -19,6 +19,14 @@ button,input,select{font:inherit}button{cursor:pointer}.wrap{width:min(1100px,92
 <div class="modal" id="cartModal" role="dialog" aria-modal="true"><div class="panel"><div class="panelhead"><h2>سلة المشتريات</h2><button class="close" id="closeCart">×</button></div><div class="notice">هذه نسخة واجهة تجريبية؛ إرسال الطلبات وحفظها بشكل دائم غير مفعّل بعد.</div><div id="cartItems"></div><p><strong>المجموع: <span id="total">0</span> درهم</strong></p><h3>معلومات الزبون (عرض تجريبي)</h3><form id="orderForm"><div class="formgrid"><label>الاسم الكامل<input required name="name" autocomplete="name"></label><label>رقم الهاتف<input required name="phone" type="tel" autocomplete="tel"></label><label>المدينة<input required name="city" autocomplete="address-level2"></label><label class="wide">العنوان بالتفصيل<input required name="address" autocomplete="street-address"></label></div><button class="submit" type="submit">مراجعة الطلب التجريبي</button></form><p id="formMsg" class="hint" aria-live="polite"></p></div></div> 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = 'https://avhnabkxoizlidplxkem.supabase.co/rest/v1/';
+const SUPABASE_KEY = 'sb_publishable_IObXI3QvXtqUQY_YaZHEuA_dZCs8WPK';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
 const books=[{id:1,title:"لغز في آخر الليل",author:"مثال تجريبي",category:"غموض",price:45,desc:"رواية غموض قصيرة تبدأ برسالة مجهولة وتكشف أسراراً غير متوقعة."},{id:2,title:"ظلال الممر",author:"مثال تجريبي",category:"تشويق",price:55,desc:"أحداث متسارعة وشخصيات تحاول الوصول إلى الحقيقة قبل فوات الأوان."},{id:3,title:"رحلة إلى المجهول",author:"مثال تجريبي",category:"مغامرة",price:60,desc:"رحلة مليئة بالمفاجآت والقرارات الصعبة في أماكن غير مألوفة."},{id:4,title:"حين تتكلم الذاكرة",author:"مثال تجريبي",category:"دراما",price:50,desc:"حكاية عن الذكريات والروابط الإنسانية والفرص الثانية."}];
 let cart={};const el=id=>document.getElementById(id);
 function renderBooks(){const q=el('search').value.trim().toLowerCase(),cat=el('category').value;const list=books.filter(b=>(cat==='الكل'||b.category===cat)&&(`${b.title} ${b.author} ${b.category}`).toLowerCase().includes(q));el('books').innerHTML=list.map(b=>`<article class="book"><div class="cover">${b.title}</div><div class="bookbody"><h3>${b.title}</h3><div class="author">${b.author} · ${b.category}</div><p class="desc">${b.desc}</p><div class="bookbottom"><span class="price">${b.price} درهم</span><button class="add" onclick="addToCart(${b.id})">أضف للسلة</button></div></div></article>`).join('');el('empty').hidden=list.length>0}
