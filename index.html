@@ -598,7 +598,7 @@ function renderBooks() {
     const author = escapeHTML(book.author);
     const category = escapeHTML(book.category);
     const desc = escapeHTML(book.desc);
-    const imageURL = book.image_url;
+    const imageURL = (book.image_url || '').trim();
     const price = book.price;
 
     const cover = imageURL
