@@ -734,37 +734,77 @@ document.addEventListener('keydown', event => {
   }
 });
 
-el('orderForm').addEventListener('submit', event => {
+
+el('orderForm').addEventListener('submit', async event => {
   event.preventDefault();
 
   if (cartCount() === 0) {
     el('formMsg').textContent =
-      'أضف رواية واحدة على الأقل قبل مراجعة الطلب.';
+      'أضف رواية واحدة على الأقل قبل تأكيد الطلب.';
     return;
   }
 
   const formData = new FormData(event.target);
+  const name = String(formData.get('name') || '').trim();
+  const phone = String(formData.get('phone') || '').trim();
+  const city = String(formData.get('city') || '').trim();
+  const address = String(formData.get('address') || '').trim();
 
-  const summary = Object.keys(cart).map(id => {
+  const items = Object.keys(cart).map(id => {
     const book = books.find(
       item => Number(item.id) === Number(id)
     );
 
-    return book
-      ? `${book.title} × ${cart[id]}`
-      : '';
-  }).filter(Boolean).join('، ');
+    return book ? {
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      quantity: cart[id]
+    } : null;
+  }).filter(Boolean);
 
-  const name = formData.get('name');
-  const city = formData.get('city');
-  const address = formData.get('address');
-  const phone = formData.get('phone');
+  const total = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
-  el('formMsg').textContent =
-    `معاينة فقط: ${name}، ${phone}، ${city}، ${address}. ` +
-    `الروايات: ${summary}. المجموع: ${el('total').textContent} درهم. ` +
-    'لم يتم إرسال الطلب أو حفظه.';
+  const button = event.submitter;
+  if (button) button.disabled = true;
+
+  el('formMsg').textContent = 'جارٍ حفظ الطلب...';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('orders')
+      .insert([{
+        customer_name: name,
+        phone: phone,
+        address: `${city} - ${address}`,
+        items: items,
+        total: total,
+        status: 'pending'
+      }])
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    el('formMsg').textContent =
+      `تم تسجيل طلبك بنجاح! رقم الطلب: ${data.id}`;
+
+    cart = {};
+    renderCart();
+    event.target.reset();
+
+  } catch (error) {
+    console.error('Order error:', error);
+    el('formMsg').textContent =
+      'تعذر حفظ الطلب. لم يتم إرسال الطلب، حاول لاحقاً.';
+  } finally {
+    if (button) button.disabled = false;
+  }
 });
+
 
 loadBooks();
 </script>
