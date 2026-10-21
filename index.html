@@ -14,8 +14,25 @@ button,input,select{font:inherit}button{cursor:pointer}.wrap{width:min(1100px,92
 <body>
 <header><div class="wrap top"><a class="brand" href="#">عالم الروايات<small>حكايات تستحق أن تُعاش</small></a><div class="actions"><button class="iconbtn" id="themeBtn">☾ الوضع الليلي</button><button class="cartbtn" id="cartBtn">السلة <span id="cartCount">0</span></button></div></div></header>
 <main class="wrap"><section class="hero"><div class="heroBox"><div><div class="eyebrow">مساحة لعشاق الحكايات</div><h1>كل رواية… باب إلى عالم جديد</h1><p>اكتشف روايات التشويق والغموض والمغامرة، واختر حكايتك القادمة من متجر عالم الروايات.</p><button class="primary" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">اكتشف الروايات</button></div><div class="heroArt" aria-hidden="true">📚</div></div></section>
-<section id="catalog"><h2>تصفّح الروايات</h2><p class="hint">هذه نسخة تجريبية للواجهة؛ الروايات والأسعار أدناه أمثلة قابلة للتعديل.</p><div class="tools"><input id="search" type="search" placeholder="ابحث عن رواية أو كاتب..."><select id="category"><option value="الكل">جميع التصنيفات</option><option>غموض</option><option>تشويق</option><option>مغامرة</option><option>دراما</option></select></div><div class="grid" id="books"></div><div class="empty" id="empty" hidden>ما لقينا حتى رواية بهاد البحث.</div></section></main>
-<footer><div class="wrap footerinner"><div><strong>عالم الروايات</strong><div>كتابك القادم يبدأ من هنا.</div></div><div>للاستفسار: أضف هنا وسائل التواصل الخاصة بالمتجر<br>© عالم الروايات</div></div></footer>
+<section id="catalog">
+  <h2>تصفّح الروايات</h2>
+  <p class="hint">هذه نسخة تجريبية للواجهة؛ الروايات والأسعار أدناه أمثلة قابلة للتعديل.</p>
+
+  <div class="tools">
+    <input id="search" type="search" placeholder="ابحث عن رواية أو كاتب...">
+    <select id="category">
+      <option value="الكل">جميع التصنيفات</option>
+      <option>غموض</option>
+      <option>تشويق</option>
+      <option>مغامرة</option>
+      <option>دراما</option>
+      <option>رعب</option>
+    </select>
+  </div>
+
+  <div class="grid" id="books"></div>
+  <div class="empty" id="empty" hidden>ما لقينا حتى رواية بهاد البحث.</div>
+</section><footer><div class="wrap footerinner"><div><strong>عالم الروايات</strong><div>كتابك القادم يبدأ من هنا.</div></div><div>للاستفسار: أضف هنا وسائل التواصل الخاصة بالمتجر<br>© عالم الروايات</div></div></footer>
 <div class="modal" id="cartModal" role="dialog" aria-modal="true"><div class="panel"><div class="panelhead"><h2>سلة المشتريات</h2><button class="close" id="closeCart">×</button></div><div class="notice">هذه نسخة واجهة تجريبية؛ إرسال الطلبات وحفظها بشكل دائم غير مفعّل بعد.</div><div id="cartItems"></div><p><strong>المجموع: <span id="total">0</span> درهم</strong></p><h3>معلومات الزبون (عرض تجريبي)</h3><form id="orderForm"><div class="formgrid"><label>الاسم الكامل<input required name="name" autocomplete="name"></label><label>رقم الهاتف<input required name="phone" type="tel" autocomplete="tel"></label><label>المدينة<input required name="city" autocomplete="address-level2"></label><label class="wide">العنوان بالتفصيل<input required name="address" autocomplete="street-address"></label></div><button class="submit" type="submit">مراجعة الطلب التجريبي</button></form><p id="formMsg" class="hint" aria-live="polite"></p></div></div> 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -47,12 +64,13 @@ async function loadBooks() {
     id: book.id,
     title: book.title,
     author: book.author,
-    category: book.category,
+    category: (book.category || '').trim(),
     price: book.price,
     desc: book.description || ''
   }));
 
-  loadBooks();
+    renderBooks();
+    renderCart();
 }
 
 function renderBooks() {
@@ -83,5 +101,25 @@ function renderBooks() {
 function renderCart(){const ids=Object.keys(cart).filter(id=>cart[id]>0);el('cartItems').innerHTML=ids.length?ids.map(id=>{const b=books.find(x=>x.id===Number(id));return `<div class="cartline"><div><strong>${b.title}</strong><div>${b.price} درهم للنسخة</div></div><div class="qty"><button type="button" onclick="changeQty(${id},-1)">−</button><span>${cart[id]}</span><button type="button" onclick="changeQty(${id},1)">+</button></div></div>`}).join(''):'<p class="hint">السلة فارغة حالياً.</p>';el('total').textContent=ids.reduce((sum,id)=>sum+books.find(b=>b.id===Number(id)).price*cart[id],0)}
 function changeQty(id,delta){cart[id]=(cart[id]||0)+delta;if(cart[id]<=0)delete cart[id];el('cartCount').textContent=Object.values(cart).reduce((a,b)=>a+b,0);renderCart()}
 el('search').addEventListener('input',renderBooks);el('category').addEventListener('change',renderBooks);el('themeBtn').addEventListener('click',()=>{document.body.classList.toggle('dark');el('themeBtn').textContent=document.body.classList.contains('dark')?'☀ الوضع النهاري':'☾ الوضع الليلي'});el('cartBtn').addEventListener('click',()=>{el('cartModal').classList.add('open');renderCart()});el('closeCart').addEventListener('click',()=>el('cartModal').classList.remove('open'));el('cartModal').addEventListener('click',e=>{if(e.target===el('cartModal'))el('cartModal').classList.remove('open')});
-el('orderForm').addEventListener('submit',e=>{e.preventDefault();if(!Object.keys(cart).length){el('formMsg').textContent='أضف رواية واحدة على الأقل قبل مراجعة الطلب.';return}const data=new FormData(e.target);const summary=Object.keys(cart).map(id=>`${books.find(b=>b.id===Number(id)).title} × ${cart[id]}`).join('، ');el('formMsg').textContent=`معاينة فقط — ${data.get('name')}، ${data.get('city')}، ${summary}. لم يُرسل أي طلب حقيقي.`});renderBooks();renderCart();
-</script></body></html>
+el('orderForm').addEventListener('submit', e => {
+  e.preventDefault();
+
+  if (Object.keys(cart).length === 0) {
+    el('formMsg').textContent = 'أضف رواية واحدة على الأقل قبل مراجعة الطلب.';
+    return;
+  }
+
+  const data = new FormData(e.target);
+  const summary = Object.keys(cart).map(id => {
+    const book = books.find(b => b.id === Number(id));
+    return `${book.title} × ${cart[id]}`;
+  }).join('، ');
+
+  el('formMsg').textContent =
+    `معاينة فقط — ${data.get('name')}، ${data.get('city')}، ${summary}. لم يُرسل أي طلب حقيقي.`;
+});
+
+loadBooks();
+</script>
+</body>
+</html>
