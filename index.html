@@ -68,8 +68,7 @@ async function loadBooks() {
     category: (book.category || '').trim(),
     price: book.price,
     desc: book.description || '',
-    image_url: book.image_url || ''
-  }));
+    image_url: (book.image_url || '').trim() 
 
     renderBooks();
     renderCart();
