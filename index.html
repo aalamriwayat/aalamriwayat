@@ -66,7 +66,8 @@ async function loadBooks() {
     author: book.author,
     category: (book.category || '').trim(),
     price: book.price,
-    desc: book.description || ''
+    desc: book.description || '',
+    image_url: book.image_url || ''
   }));
 
     renderBooks();
@@ -83,7 +84,11 @@ function renderBooks() {
 
   el('books').innerHTML = list.map(b =>
     `<article class="book">
-      <div class="cover">${b.title}</div>
+     <div class="cover">
+  ${b.image_url
+    ? `<img src="${b.image_url}" alt="غلاف ${b.title}" style="width:100%;height:100%;object-fit:cover;">`
+    : b.title}
+</div>
       <div class="bookbody">
         <h3>${b.title}</h3>
         <div class="author">${b.author} · ${b.category}</div>
