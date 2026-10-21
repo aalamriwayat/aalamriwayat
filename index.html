@@ -27,10 +27,59 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-const books=[{id:1,title:"لغز في آخر الليل",author:"مثال تجريبي",category:"غموض",price:45,desc:"رواية غموض قصيرة تبدأ برسالة مجهولة وتكشف أسراراً غير متوقعة."},{id:2,title:"ظلال الممر",author:"مثال تجريبي",category:"تشويق",price:55,desc:"أحداث متسارعة وشخصيات تحاول الوصول إلى الحقيقة قبل فوات الأوان."},{id:3,title:"رحلة إلى المجهول",author:"مثال تجريبي",category:"مغامرة",price:60,desc:"رحلة مليئة بالمفاجآت والقرارات الصعبة في أماكن غير مألوفة."},{id:4,title:"حين تتكلم الذاكرة",author:"مثال تجريبي",category:"دراما",price:50,desc:"حكاية عن الذكريات والروابط الإنسانية والفرص الثانية."}];
-let cart={};const el=id=>document.getElementById(id);
-function renderBooks(){const q=el('search').value.trim().toLowerCase(),cat=el('category').value;const list=books.filter(b=>(cat==='الكل'||b.category===cat)&&(`${b.title} ${b.author} ${b.category}`).toLowerCase().includes(q));el('books').innerHTML=list.map(b=>`<article class="book"><div class="cover">${b.title}</div><div class="bookbody"><h3>${b.title}</h3><div class="author">${b.author} · ${b.category}</div><p class="desc">${b.desc}</p><div class="bookbottom"><span class="price">${b.price} درهم</span><button class="add" onclick="addToCart(${b.id})">أضف للسلة</button></div></div></article>`).join('');el('empty').hidden=list.length>0}
-function addToCart(id){cart[id]=(cart[id]||0)+1;renderCart();el('cartCount').textContent=Object.values(cart).reduce((a,b)=>a+b,0)}
+let books = [];
+let cart = {};
+const el = id => document.getElementById(id);
+
+async function loadBooks() {
+  const { data, error } = await supabaseClient
+    .from('books')
+    .select('*');
+
+  if (error) {
+    console.error('خطأ في جلب الكتب:', error.message);
+    el('empty').hidden = false;
+    el('empty').textContent = 'تعذر تحميل الروايات حالياً.';
+    return;
+  }
+
+  books = data.map(book => ({
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    category: book.category,
+    price: book.price,
+    desc: book.description || ''
+  }));
+
+  loadBooks();
+}
+
+function renderBooks() {
+  const q = el('search').value.trim().toLowerCase();
+  const cat = el('category').value;
+  const list = books.filter(b =>
+    (cat === 'الكل' || b.category === cat) &&
+    (`${b.title} ${b.author} ${b.category}`).toLowerCase().includes(q)
+  );
+
+  el('books').innerHTML = list.map(b =>
+    `<article class="book">
+      <div class="cover">${b.title}</div>
+      <div class="bookbody">
+        <h3>${b.title}</h3>
+        <div class="author">${b.author} · ${b.category}</div>
+        <p class="desc">${b.desc}</p>
+        <div class="bookbottom">
+          <span class="price">${b.price} درهم</span>
+          <button class="add" onclick="addToCart(${b.id})">أضف للسلة</button>
+        </div>
+      </div>
+    </article>`
+  ).join('');
+
+  el('empty').hidden = list.length > 0;
+}function addToCart(id){cart[id]=(cart[id]||0)+1;renderCart();el('cartCount').textContent=Object.values(cart).reduce((a,b)=>a+b,0)}
 function renderCart(){const ids=Object.keys(cart).filter(id=>cart[id]>0);el('cartItems').innerHTML=ids.length?ids.map(id=>{const b=books.find(x=>x.id===Number(id));return `<div class="cartline"><div><strong>${b.title}</strong><div>${b.price} درهم للنسخة</div></div><div class="qty"><button type="button" onclick="changeQty(${id},-1)">−</button><span>${cart[id]}</span><button type="button" onclick="changeQty(${id},1)">+</button></div></div>`}).join(''):'<p class="hint">السلة فارغة حالياً.</p>';el('total').textContent=ids.reduce((sum,id)=>sum+books.find(b=>b.id===Number(id)).price*cart[id],0)}
 function changeQty(id,delta){cart[id]=(cart[id]||0)+delta;if(cart[id]<=0)delete cart[id];el('cartCount').textContent=Object.values(cart).reduce((a,b)=>a+b,0);renderCart()}
 el('search').addEventListener('input',renderBooks);el('category').addEventListener('change',renderBooks);el('themeBtn').addEventListener('click',()=>{document.body.classList.toggle('dark');el('themeBtn').textContent=document.body.classList.contains('dark')?'☀ الوضع النهاري':'☾ الوضع الليلي'});el('cartBtn').addEventListener('click',()=>{el('cartModal').classList.add('open');renderCart()});el('closeCart').addEventListener('click',()=>el('cartModal').classList.remove('open'));el('cartModal').addEventListener('click',e=>{if(e.target===el('cartModal'))el('cartModal').classList.remove('open')});
