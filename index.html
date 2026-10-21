@@ -806,6 +806,8 @@ event.target.reset();
 
   } catch (error) {
     console.error('Order error:', error);
+el('formMsg').textContent =
+  'خطأ: ' + (error.message || JSON.stringify(error));
     el('formMsg').textContent =
       'تعذر حفظ الطلب. لم يتم إرسال الطلب، حاول لاحقاً.';
   } finally {
