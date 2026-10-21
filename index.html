@@ -61,19 +61,19 @@ async function loadBooks() {
     return;
   }
 
-  books = data.map(book => ({
+    books = data.map(book => ({
     id: book.id,
     title: book.title,
     author: book.author,
     category: (book.category || '').trim(),
     price: book.price,
     desc: book.description || '',
-    image_url: (book.image_url || '').trim()  }));
+    image_url: (book.image_url || '').trim()
+  }));
 
-    renderBooks();
-    renderCart();
+  renderBooks();
+  renderCart();
 }
-
 function renderBooks() {
   const q = el('search').value.trim().toLowerCase();
   const cat = el('category').value;
