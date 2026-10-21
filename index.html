@@ -809,7 +809,7 @@ event.target.reset();
 el('formMsg').textContent =
   'خطأ: ' + (error.message || JSON.stringify(error));
     el('formMsg').textContent =
-      'تعذر حفظ الطلب. لم يتم إرسال الطلب، حاول لاحقاً.';
+  'الخطأ الحقيقي: ' + error.message;
   } finally {
     if (button) button.disabled = false;
   }
