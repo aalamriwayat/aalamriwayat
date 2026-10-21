@@ -773,18 +773,27 @@ el('orderForm').addEventListener('submit', async event => {
   el('formMsg').textContent = 'جارٍ حفظ الطلب...';
 
   try {
-    const { data, error } = await supabaseClient
-      .from('orders')
-      .insert([{
-        customer_name: name,
-        phone: phone,
-        address: `${city} - ${address}`,
-        items: items,
-        total: total,
-        status: 'pending'
-      }])
-      .select('id')
-      .single();
+    
+const { error } = await supabaseClient
+  .from('orders')
+  .insert([{
+    customer_name: name,
+    phone: phone,
+    address: `${city} - ${address}`,
+    items: items,
+    total: total,
+    status: 'pending'
+  }]);
+
+if (error) throw error;
+
+el('formMsg').textContent =
+  'تم تسجيل طلبك بنجاح!';
+
+cart = {};
+renderCart();
+event.target.reset();
+
 
     if (error) throw error;
 
